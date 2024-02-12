@@ -27,8 +27,8 @@ jobs:
 
     - name: Push Docker Image
       run: |
-        echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-        docker push etl:latest
+        echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login ghcr.io -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+        docker push ghcr.io/your-organization/etl:latest
 
     - name: Run Tests
       run: docker run etl python -m unittest discover tests/
