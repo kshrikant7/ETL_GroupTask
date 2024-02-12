@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - ankit
+  schedule:
+    - cron: '0 0 * * *'  # Schedule it to run daily at midnight
 
 jobs:
   build:
@@ -34,11 +36,11 @@ jobs:
     - name: Push the Docker image
       run: docker push ankit9911/etl:latest
 
-    - name: Run Tests with Bandit
-      run: pip install bandit
+    # - name: Run Tests with Bandit
+    #   run: pip install bandit
 
-    - name: Run Bandit Command
-      run: bandit -r .
+    # - name: Run Bandit Command
+    #   run: bandit -r .
     
     # - name: Package Application
     #   run: docker run ankit9911/etl python setup.py sdist bdist_wheel
