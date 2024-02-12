@@ -224,7 +224,7 @@ def save_to_mysql(data):
         connection = mysql.connector.connect(
             host="localhost",
             user="Enter Username",
-            password="Enter PAssword",
+            password="Enter Password",
             database="Enter Database"
         )
 
