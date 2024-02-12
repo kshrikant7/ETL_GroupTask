@@ -11,7 +11,7 @@ ADD . /app
 RUN pip install --no-cache-dir -r requirement.txt
 
 #Run setup.py to package your application
-RUN python setup.py sdist bdist_wheel
+# RUN python setup.py sdist bdist_wheel
 
 # Make port 80 available to the world outside this container
 EXPOSE 80
