@@ -1,1 +1,30 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Build Docker Image
+        run: docker build -t myapp .
+
+      - name: Run Tests
+        run: docker run myapp python -m unittest discover tests/
+
+      - name: Package Application
+        run: docker run myapp python setup.py sdist bdist_wheel
+
+      - name: Deploy
+        run: |
+          # Replace this with your deployment commands
+          # For example, pushing the Docker image to a registry or deploying it to a server
+          # docker push myapp:latest
 
