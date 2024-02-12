@@ -18,8 +18,9 @@ jobs:
       with:
         python-version: 3.x
 
-    - name: Install Dependencies
-      run: pip install --upgrade pip && pip install -r requirement.txt
+    # - name: Install Dependencies
+    #   run: pip install --upgrade pip
+    #   run: pip install -r requirements.txt
 
     - name: Build Docker Image
       run: docker build -t etl:latest .
