@@ -1,21 +1,41 @@
-name: CI/CD
+name: ETL Pipeline CI/CD
 
 on:
   push:
     branches:
       - main
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
+    - name: Checkout Repository
+      uses: actions/checkout@v2
 
-      - name: Build Docker Image
-        run: docker build -t etl:latest .
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.x
 
-      - name: Push Docker Image
-        run: |
-          echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-          docker push etl:latest
+    - name: Install Dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Run Tests
+      run: |
+        pytest
+
+    - name: Build Docker Image
+      run: docker build -t etl:latest .
+
+    - name: Push Docker Image
+      run: |
+        echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+        docker push etl:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - name: Deploy to Production
