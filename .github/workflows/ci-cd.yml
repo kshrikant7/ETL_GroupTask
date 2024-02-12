@@ -20,7 +20,7 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        pip install -r requirements.txt
+        pip install -r requirement.txt
 
     - name: Run Tests
       run: docker run etl python -m unittest discover tests/
