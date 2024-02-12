@@ -22,14 +22,15 @@ jobs:
 
     - name: Send Logs to Logstash
       run: |
-        # Checkout the 'ankit' branch of the repository
+       # Checkout the 'ankit' branch of the repository
         git checkout ankit
 
-        # Copy Logstash configuration from the 'ankit' branch to the current working directory
-        cp etl_logstash.conf .
+       # Copy Logstash configuration from the 'ankit' branch to the current working directory
+        cp -n etl_logstash.conf .
 
-        # Send a POST request to Logstash with the Logstash configuration
+       # Send a POST request to Logstash with the Logstash configuration
         curl -X POST -H 'Content-Type: application/json' -d @etl_logstash.conf http://localhost:5044
+
 
 
 
