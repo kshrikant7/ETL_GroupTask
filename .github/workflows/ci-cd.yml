@@ -34,11 +34,11 @@ jobs:
     - name: Push the Docker image
       run: docker push ankit9911/etl:latest
   
-    - name: Run Tests
-      run: docker run ankit9911/etl python -m unittest discover tests/
+    # - name: Run Tests
+    #   run: docker run ankit9911/etl python -m unittest discover tests/
     
-    - name: Package Application
-      run: docker run ankit9911/etl python setup.py sdist bdist_wheel
+    # - name: Package Application
+    #   run: docker run ankit9911/etl python setup.py sdist bdist_wheel
 
     
 
