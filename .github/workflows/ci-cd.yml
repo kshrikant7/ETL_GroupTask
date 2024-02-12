@@ -23,8 +23,10 @@ jobs:
         pip install -r requirements.txt
 
     - name: Run Tests
-      run: |
-        pytest
+      run: docker run etl python -m unittest discover tests/
+    
+    - name: Package Application
+      run: docker run etl python setup.py sdist bdist_wheel
 
     - name: Build Docker Image
       run: docker build -t etl:latest .
