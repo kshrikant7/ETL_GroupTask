@@ -24,7 +24,7 @@ jobs:
 
       - name: Deploy
         run: |
-          # Replace this with your deployment commands
-          # For example, pushing the Docker image to a registry or deploying it to a server
-          # docker push myapp:latest
+          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+          docker tag myapp:latest $DOCKER_USERNAME/myapp:latest
+          docker push $DOCKER_USERNAME/myapp:latest
 
