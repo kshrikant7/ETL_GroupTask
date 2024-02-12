@@ -46,7 +46,7 @@ jobs:
 
     - name: Build the Docker image
       run: docker build -t ankit9911/etl:latest .
-
+ 
     - name: Push the Docker image
       run: docker push ankit9911/etl:latest
 
