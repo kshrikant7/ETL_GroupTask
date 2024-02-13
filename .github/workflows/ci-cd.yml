@@ -15,10 +15,10 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v2
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.11.6
+    # - name: Set up Python
+    #   uses: actions/setup-python@v2
+    #   with:
+    #     python-version: 3.11.6
 
     # - name: Send Logs to Logstash
     #   run: |
@@ -52,3 +52,10 @@ jobs:
  
     - name: Push the Docker image
       run: docker push ankit9911/etl:latest
+
+    - name: Save Logs as Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: github_actions_logs
+        path: /github/workflow-logs
+
