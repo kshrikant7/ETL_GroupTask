@@ -57,6 +57,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: github_actions_logs
+        path: ${{ github.workspace }}/.github/workflows
 
     - name: Ship Logs to Logstash
       uses: actions/ship-logs-to-logstash@v1
@@ -64,5 +65,5 @@ jobs:
       logstash-host: 4fb7-116-73-143-230.ngrok-free.app
       logstash-port: 5044
 
-        path: ${{ github.workspace }}/.github/workflows
+  
 
