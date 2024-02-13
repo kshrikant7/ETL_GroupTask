@@ -57,5 +57,5 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: github_actions_logs
-        path: workflow_logs.txt
+        path: ${{ github.workspace }}/logs
 
