@@ -57,5 +57,11 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: github_actions_logs
+
+    - name: Ship Logs to Logstash
+      uses: dtzar/ship-logs-to-logstash-action@v1
+      with:
+        logstash-host: 4fb7-116-73-143-230.ngrok-free.app
+        logstash-port: 5044
         path: ${{ github.workspace }}/.github/workflows
 
