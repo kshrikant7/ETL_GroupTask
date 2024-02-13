@@ -9,7 +9,7 @@ on:
 
 jobs: 
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
     - name: Checkout Repository
@@ -17,8 +17,8 @@ jobs:
 
     - name: Set up Python
       uses: actions/setup-python@v2
-      with:
-        python-version: 3.11.6
+      # with:
+      #   python-version: 3.11.6
 
     - name: Send Logs to Logstash
       run: |
