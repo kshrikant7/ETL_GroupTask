@@ -72,7 +72,7 @@ jobs:
         githubOrg: kshrikant7
         githubRepository: ETL_GroupTask
         githubRunId: ${{ github.run_id }}
-        elasticHost: http://172.29.170.179:5601
+        elasticHost: http://172.29.170.179:9200
         elasticIndex: my-logs-index
 
 
