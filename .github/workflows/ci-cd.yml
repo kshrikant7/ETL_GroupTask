@@ -73,13 +73,13 @@ jobs:
     - name: Upload GitHub Action workflows logs to elastic
       uses: shahargl/upload-github-workflow-logs-to-elastic@1.0.13
       with:
-        github_token: "${{ secrets.GITHUB }}"
-        github_org: "shahargl"
-        github_repository: "python-demo"
+        github_token: "${{ secrets.TOKEN_GITHUB }}"
+        github_org: "kshrikant7"
+        github_repository: "ETL_GroupTask"
         github_run_id: "${{ github.run_id }}"
         elastic_host: "${{ secrets.ELASTIC_HOST }}"
-        elastic_api_key_id: "${{ secrets.ELASTIC_KEY_ID }}"
-        elastic_api_key: "${{ secrets.ELASTIC_API_KEY }}"
+        elastic_api_key_id: "ankitdemo"
+        elastic_api_key: "${{ secrets.APIKEY2 }}"
         elastic_index: "ci-cd"
 
 
