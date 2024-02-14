@@ -59,11 +59,21 @@ jobs:
         name: github_actions_logs
         path: ${{ github.workspace }}/.github/workflows
 
-    - name: Ship Logs to Logstash
-      uses: actions/ship-logs-to-logstash@v1
-      with:
-        logstash-host: 4fb7-116-73-143-230.ngrok-free.app
-        logstash-port: 5044
+    # - name: Ship Logs to Logstash
+    #   uses: actions/ship-logs-to-logstash@v1
+    #   with:
+    #     logstash-host: 4fb7-116-73-143-230.ngrok-free.app
+    #     logstash-port: 5044
 
-  
+    - name: Github Logs to Elastic
+      uses: KnutFr/github-actions-to-elk@v1.0.6
+      with:
+        githubToken: ${{ secrets.TOKEN_GITHUB }}
+        githubOrg: kshrikant7
+        githubRepository: ETL_GroupTask
+        githubRunId: ${{ github.run_id }}
+        elasticHost: http://localhost:5601
+        elasticIndex: my-logs-index
+
+
 
