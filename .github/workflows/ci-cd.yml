@@ -3,7 +3,7 @@ name: ETL Pipeline CI/CD
 on:
   push:
     branches:
-      - ankit
+      - ankit 
   schedule:
     - cron: '0 0 * * *'  # Schedule it to run daily at midnight
 
