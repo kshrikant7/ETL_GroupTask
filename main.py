@@ -1,4 +1,5 @@
-import requests, os, json
+import requests, json, os, logging
+from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 import mysql.connector
 
@@ -19,6 +20,13 @@ TRAIN_STATION_URLS = ["https://www.cleartrip.com/trains/stations/list",
     "https://www.cleartrip.com/trains/stations/list?page=5",
 ]
 
+with open ('application.log', 'w'):
+    pass
+
+logging.basicConfig(filename='application.log', level=logging.INFO, format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
+
+
+load_dotenv()
 
 def scrape_indian_cities_data(url):
     response = requests.get(url)
@@ -69,6 +77,7 @@ def scrape_indian_cities_lat_long(url):
     
 #Combine data
 def combine_data(cities_data, geo_data, train_data):
+    logging.info('Started combining data')
 # Create a new dictionary to store the combined data
     combined_data = {}
 
@@ -97,25 +106,23 @@ def combine_data(cities_data, geo_data, train_data):
             combined_data[city_name]['train_station'] = train_station
             combined_data[city_name]['code'] = code
 
-
-    # combined_data = {city: data for city, data in combined_data.items() if 'population' in data and 'latitude' in data and 'longitude' in data}
     combined_data = {city: {**data, 'train_station': data['train_station'], 'code': data['code']} 
         for city, data in combined_data.items() 
         if 'population' in data and 'latitude' in data and 'longitude' in data 
         and 'train_station' in data and 'code' in data
         }   
+    logging.info('Finished combining data')
     return combined_data
 
 #Get Weather Data
 def get_weather(lat, lon):
     # Define OpenWeather API key
-    
-    api_key = os.getenv('OPENWEATHER_API_KEY')
+    api_key = os.getenv("OPENWEATHER_API_KEY")
 
     try:
-        # Make a GET request to the OpenWeather API        s.headers.update({'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1'})
-
+        logging.info(f'Hitting OpenWeatherAPI for Latitude: {lat}, Longitude: {lon}')
         response = requests.get(f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={api_key}")
+        logging.info(f'Status: {response.status_code}')
 
         # Check if the request was successful
         if response.status_code == 200:
@@ -128,7 +135,6 @@ def get_weather(lat, lon):
                 wind_speed = weather_data['wind']['speed']
                 weather_conditions = weather_data['weather'][0]['description']
                 city_id = weather_data['id']
-
                 # Return the data
                 return {
                     'city_id': city_id,
@@ -144,10 +150,10 @@ def get_weather(lat, lon):
                 print("Error: Some necessary data is missing in the response")
                 return None
         else:
-            print(f"Failed to get weather data for Latitude: {lat}, Longitude: {lon}. Status code: {response.status_code}, Response: {response.text}")
+            logging.error(f"Failed to get weather data for Latitude: {lat}, Longitude: {lon}. Status code: {response.status_code}, Response: {response.text}")
             return None
     except requests.exceptions.RequestException as e:
-        print(f"Error: {e}")
+        logging.error(f"Error: {e}")
         return None
 
 # Fetch station data   
@@ -172,60 +178,96 @@ def fetch_station_data(url):
                         'code': code  
                     })
         else:
-            print(f"Failed to fetch data from {url}.")
+            logging.error(f"Failed to fetch data from {url}.")
     return train_station
 
-# Main function to execute ETL pipeline
-if __name__ == "__main__":
-    # Scrape city data from Wikipedia
-    cities_data = scrape_indian_cities_data(WIKIPEDIA_URL)
+def train_details(station_code, station_name):
+    try:
+        url = "https://irctc1.p.rapidapi.com/api/v3/getTrainsByStation"
+        querystring = {"stationCode": station_code}
+        logging.info(f'Fetching train details for station code: {station_code}')
+        headers = {
+            "X-RapidAPI-Key": os.getenv("IRCTC_API_KEY"),
+            "X-RapidAPI-Host": os.getenv("IRCTC_API_HOST")
+        }
+        response = requests.get(url, headers=headers, params=querystring)
+        logging.info(f'Status: {response.status_code}')
+        data = response.json()
+        if response.status_code == 200:
+        # Extract the 'originating' and 'passing' lists from the 'data' dictionary
+            try:
+                originating_trains = data['data']['originating']
+                passing_trains = data['data']['passing']
+                destination_trains = data['data']['destination']
+            except KeyError as e:
+                logging.error(f'KeyError in train details data: {e}')
 
-    # Scrape latitude and longitude data from latlong.net
-    geo_data = []
-    for url in LAT_LONG_URL:
-        geo_data.extend(scrape_indian_cities_lat_long(url))
+            all_trains = []
 
-    train_data =[]
-    for url in TRAIN_STATION_URLS:
-        train_data.extend(fetch_station_data(url))
+            # Iterate over each train in the 'originating' list
+            for train in originating_trains:
+                train_no = train['trainNo']
+                train_name = train['trainName']
+                arrival_time = train['arrivalTime'] if train['arrivalTime'] != 'Source' else None
+                departure_time = train['departureTime']
 
-    combined_data = combine_data(cities_data, geo_data, train_data)
+                all_trains.append({
+                    'station_name': station_name,
+                    'train_number': train_no,
+                    'train_name': train_name,
+                    'arrival_time': arrival_time,
+                    'departure_time': departure_time
+                })
 
-    # Get weather data for each city
-    for city, data in combined_data.items():
-        lat = data['latitude']
-        lon = data['longitude']
-        weather_data = get_weather(lat, lon)
-        if weather_data:
-            data.update(weather_data)
+            # Iterate over each train in the 'passing' list
+            for train in passing_trains:
+                train_no = train['trainNo']
+                train_name = train['trainName']
+                arrival_time = train['arrivalTime']
+                departure_time = train['departureTime']
 
-    # Print the combined data
-    for city, data in combined_data.items():
-        if 'city_id' in data:
-            print(f"City ID: {data['city_id']}")
-            print(f"City: {city}")
-            print(f"Population: {data['population']}")
-            print(f"Latitude: {data['latitude']}")
-            print(f"Longitude: {data['longitude']}")
-            print(f"Temperature: {data['temperature']}")
-            print(f"Humidity: {data['humidity']}")
-            print(f"Wind Speed: {data['wind_speed']}")
-            print(f"Weather Conditions: {data['weather_conditions']}")
-            print(f"Train Station: {data['train_station']}")
-            print(f"Code: {data['code']}")  
-            print()
+                all_trains.append({
+                    'station_name': station_name,
+                    'train_number': train_no,
+                    'train_name': train_name,
+                    'arrival_time': arrival_time,
+                    'departure_time': departure_time
+                })
 
+            # Iterate over each train in the 'destination' list
+            for train in destination_trains:
+                train_no = train['trainNo']
+                train_name = train['trainName']
+                arrival_time = train['arrivalTime']
+                departure_time = train['departureTime'] if train['departureTime'] != 'Destination' else None
+
+                all_trains.append({
+                    'station_name': station_name,
+                    'train_number': train_no,
+                    'train_name': train_name,
+                    'arrival_time': arrival_time,
+                    'departure_time': departure_time
+                })
+            return all_trains
+        else:
+            logging.error(f"Failed to get train details for station code: {station_code}. Status code: {response.status_code}, Response: {response.text}")
+            return None
+
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Error: {e}")
+        return None
 
 
 # Function to save data to MySQL
 def save_to_mysql(data):
+    logging.info('Started saving data to MySQL')
     # Establish a connection to the MySQL server
     try:
         connection = mysql.connector.connect(
-            host="localhost",
-            user="Enter Username",
-            password="Enter PAssword",
-            database="Enter Database"
+            host=os.getenv("MYSQL_HOST"),
+            user=os.getenv("MYSQL_USER"),
+            password=os.getenv("MYSQL_PASSWORD"),
+            database=os.getenv("MYSQL_DATABASE")
         )
 
         if connection.is_connected():
@@ -234,7 +276,7 @@ def save_to_mysql(data):
             # Create a table if it doesn't exist
             create_table_query = """
             CREATE TABLE IF NOT EXISTS city_data (
-                city_id INT PRIMARY KEY,
+                city_id INT,
                 city_name VARCHAR(255),
                 population BIGINT,
                 latitude FLOAT,
@@ -243,19 +285,32 @@ def save_to_mysql(data):
                 humidity FLOAT,
                 wind_speed FLOAT,
                 weather_conditions VARCHAR(255),
-                train_station VARCHAR(255),
-                code VARCHAR(255)
+                code VARCHAR(255) PRIMARY KEY
             );
             """
+            create_table_query_train = """
+            CREATE TABLE IF NOT EXISTS train_data (
+            	sl_no INT AUTO_INCREMENT PRIMARY KEY,
+                code VARCHAR(255),
+                station_name VARCHAR(255),
+				train_no INT,
+                train_name VARCHAR(255),
+                arrival_time VARCHAR(255),
+                departure_time VARCHAR(255)
+                );
+			"""
+                
             cursor.execute(create_table_query)
+            cursor.execute(create_table_query_train)
+            cursor.execute("TRUNCATE TABLE city_data")
+            cursor.execute("TRUNCATE TABLE train_data")
 
-            # Insert data into the table
             # Insert data into the table
             for city, data in combined_data.items():
                 if 'city_id' in data:
                     insert_query = """
-                    INSERT INTO city_data (city_id, city_name, population, latitude, longitude, temperature, humidity, wind_speed, weather_conditions, train_station, code)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                    INSERT INTO city_data (city_id, city_name, population, latitude, longitude, temperature, humidity, wind_speed, weather_conditions, code)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
                     """
                     # Preprocess population to remove non-numeric characters
                     population = ''.join(filter(str.isdigit, data['population']))  # Remove non-numeric characters from population
@@ -269,16 +324,28 @@ def save_to_mysql(data):
                         data['humidity'],
                         data['wind_speed'],
                         data['weather_conditions'],
-                        data['train_station'],
                         data['code']
                     ))
+            
+            for code in train_details_dict.keys():
+                for train in train_details_dict[code]:
+                    insert_query = """
+                    INSERT INTO train_data (code, station_name, train_no, train_name, arrival_time, departure_time)
+                    VALUES (%s, %s, %s, %s, %s, %s);
+					"""
+                    cursor.execute(insert_query, (
+                        code,
+                        train['station_name'],
+						train['train_number'],
+                        train['train_name'],
+						train['arrival_time'],
+						train['departure_time']
+					))
                     connection.commit()  # Commit changes after each insertion
-
-
-
+        logging.info('Finished saving data to MySQL')
 
     except mysql.connector.Error as error:
-        print("Error while connecting to MySQL", error)
+        logging.error("Error while connecting to MySQL: %s", error)
 
     finally:
         if 'connection' in locals():
@@ -286,5 +353,61 @@ def save_to_mysql(data):
                 cursor.close()
                 connection.close()
 
-# Call the function to save data to MySQL
-save_to_mysql(combined_data)
+try:
+    logging.info('Started ETL pipeline')
+    # Main function to execute ETL pipeline
+    global train_details_dict
+    if __name__ == "__main__":
+        # Scrape city data from Wikipedia
+        logging.info('Started scraping Indian cities & population data from Wikipedia')
+        cities_data = scrape_indian_cities_data(WIKIPEDIA_URL)
+        logging.info('Finished scraping Indian cities & population data from Wikipedia')
+
+        # Scrape latitude and longitude data from latlong.net
+        geo_data = []
+        logging.info('Started scraping latitude and longitude data')
+        for url in LAT_LONG_URL:
+            geo_data.extend(scrape_indian_cities_lat_long(url))
+        logging.info('Finished scraping latitude and longitude data')
+
+        # Fetch train station data
+        logging.info('Started fetching train station data')
+        train_data =[]
+        for url in TRAIN_STATION_URLS:
+            train_data.extend(fetch_station_data(url))
+        logging.info('Finished fetching train station data')
+
+        # Combine the data
+        combined_data = combine_data(cities_data, geo_data, train_data)
+
+        # Get weather data for each city
+        logging.info('Started getting weather data for cities')
+        for city, data in combined_data.items():
+            lat = data['latitude']
+            lon = data['longitude']
+            weather_data = get_weather(lat, lon)
+            if weather_data:
+                data.update(weather_data)
+        logging.info('Finished getting weather data for cities')
+
+        # Get train details for each city
+        logging.info('Started getting train details for stations')
+        train_details_dict = {}
+        count = 0
+        for city, data in combined_data.items():
+            if 'code' in data:
+                code = data['code']
+                station_name = data['train_station']
+                details = train_details(code, station_name)
+                train_details_dict[code] = details
+                count += 1
+                if count >= 24:
+                    break
+        logging.info('Finished getting train details for stations')
+        # Call the function to save data to MySQL
+        save_to_mysql(combined_data)
+    logging.info('Finished ETL pipeline')
+
+
+except Exception as e:
+    logging.error("An error occurred " + str(e))
