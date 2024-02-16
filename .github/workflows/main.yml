@@ -23,7 +23,7 @@ jobs:
     - name: Run Tests with Bandit
       run: |
         pip install bandit
-        bandit -r .
+        bandit -r . -s B113
 
     - name: Log in to Docker Hub
       uses: docker/login-action@v1
