@@ -32,7 +32,7 @@ jobs:
         password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
     - name: Build the Docker image
-      run: docker build -t ankit9911/etl:latest .
+      run: docker build --build-arg OPENWEATHER_API_KEY=${{ secrets.OPENWEATHER_API_KEY }} --build-arg IRCTC_API_KEY=${{ secrets.IRCTC_API_KEY }} --build-arg IRCTC_API_HOST=${{ secrets.IRCTC_API_HOST }} --build-arg MYSQL_HOST=${{ secrets.MYSQL_HOST }} --build-arg MYSQL_USER=${{ secrets.MYSQL_USER }} --build-arg MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }} --build-arg MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }} -t ankit9911/etl:latest .
  
     - name: Push the Docker image
       run: docker push ankit9911/etl:latest
