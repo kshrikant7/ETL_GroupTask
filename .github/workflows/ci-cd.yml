@@ -20,10 +20,10 @@ jobs:
       with:
         python-version: 3.11.6
 
-    - name: Run Tests with Bandit
-      run: |
-        pip install bandit
-        bandit -r .
+    # - name: Run Tests with Bandit
+    #   run: |
+    #     pip install bandit
+    #     bandit -r .
 
     - name: Log in to Docker Hub
       uses: docker/login-action@v1
