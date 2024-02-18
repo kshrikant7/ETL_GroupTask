@@ -32,4 +32,5 @@ ENV MYSQL_DATABASE=$MYSQL_DATABASE
 EXPOSE 80
 
 # Run test.py when the container launches
-ENTRYPOINT ["python", "main.py"]
+ENTRYPOINT ["python"]
+CMD ["main.py"]
