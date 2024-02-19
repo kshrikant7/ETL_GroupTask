@@ -401,7 +401,7 @@ try:
                 details = train_details(code, station_name)
                 train_details_dict[code] = details
                 count += 1
-                if count >= 24:
+                if count >= 4:
                     break
         logging.info('Finished getting train details for stations')
         # Call the function to save data to MySQL
