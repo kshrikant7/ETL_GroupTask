@@ -41,7 +41,6 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logger.addHandler(handler)
 
-
 load_dotenv()
 
 def scrape_indian_cities_data(url):
