@@ -23,7 +23,23 @@ TRAIN_STATION_URLS = ["https://www.cleartrip.com/trains/stations/list",
 with open ('application.log', 'w'):
     pass
 
-logging.basicConfig(filename='application.log', level=logging.INFO, format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
+import logging
+import json
+
+class JsonFormatter(logging.Formatter):
+    def format(self, record):
+        record.asctime = self.formatTime(record, self.datefmt)
+        obj = record.__dict__.copy()
+        obj['timestamp'] = obj['asctime']
+        del obj['asctime']
+        return json.dumps(obj)
+
+handler = logging.FileHandler('application1.log')
+handler.setFormatter(JsonFormatter())
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+logger.addHandler(handler)
 
 
 load_dotenv()
