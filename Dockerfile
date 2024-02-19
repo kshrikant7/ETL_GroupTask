@@ -10,6 +10,7 @@ ADD . /app
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
+
 # 
 ARG OPENWEATHER_API_KEY 
 ARG IRCTC_API_KEY 
@@ -31,4 +32,5 @@ ENV MYSQL_DATABASE=$MYSQL_DATABASE
 EXPOSE 80
 
 # Run test.py when the container launches
-ENTRYPOINT ["python", "main.py"]
+ENTRYPOINT ["python"]
+CMD ["main.py"]
