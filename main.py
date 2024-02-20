@@ -2,6 +2,8 @@ import requests, json, os, logging
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 import mysql.connector
+import logging
+from logstash_formatter import LogstashFormatter
 
 WIKIPEDIA_URL = "https://en.wikipedia.org/wiki/List_of_cities_in_India_by_population"
 LAT_LONG_URL = ["https://www.latlong.net/category/cities-102-15.html",
@@ -19,6 +21,15 @@ TRAIN_STATION_URLS = ["https://www.cleartrip.com/trains/stations/list",
     "https://www.cleartrip.com/trains/stations/list?page=4",
     "https://www.cleartrip.com/trains/stations/list?page=5",
 ]
+
+# Configure logging to send logs to Logstash
+handler = logging.handlers.SocketHandler('localhost', logging.handlers.DEFAULT_TCP_LOGGING_PORT)
+formatter = LogstashFormatter()
+handler.setFormatter(formatter)
+
+logging = logging.getLogger()
+logging.addHandler(handler)
+logging.setLevel(logging.INFO)
 
 with open ('application.log', 'w'):
     pass
