@@ -3,7 +3,7 @@ name: ETL Pipeline CI/CD
 on:
   push:
     branches:
-      - amogh,main
+      - amogh
   schedule:
     - cron: '0 0 * * *'  # Schedule it to run daily at midnight
 
