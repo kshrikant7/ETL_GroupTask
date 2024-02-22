@@ -2,6 +2,7 @@ import requests, json, os, logging
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 import mysql.connector
+import logging.handlers
 from logstash_formatter import LogstashFormatter
 
 WIKIPEDIA_URL = "https://en.wikipedia.org/wiki/List_of_cities_in_India_by_population"
