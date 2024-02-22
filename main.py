@@ -1,4 +1,4 @@
-import requests, json, os, logging, logging.handler
+import requests, json, os, logging, logging.handlers
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 import mysql.connector
