@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: etl-deployment
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: etl
@@ -17,3 +17,8 @@ spec:
         image: ankit9911/etl:latest
         ports:
         - containerPort: 8080
+        env:
+        - name: LOGSTASH_HOST
+          value: "172.29.170.199"
+        - name: LOGSTASH_PORT
+          value: "5000"
