@@ -35,7 +35,7 @@ with open ('application.log', 'w'):
     pass
 
 logging.basicConfig(filename='application.log', level=logging.INFO, format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
-
+logging.info("This is an informational message")
 
 load_dotenv()
 
