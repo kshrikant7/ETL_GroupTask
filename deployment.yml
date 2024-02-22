@@ -19,6 +19,6 @@ spec:
         - containerPort: 8080
         env:
         - name: LOGSTASH_HOST
-          value: "172.29.170.199"
+          value: "172.29.169.175"
         - name: LOGSTASH_PORT
           value: "5000"
