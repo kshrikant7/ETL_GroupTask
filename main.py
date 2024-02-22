@@ -1,8 +1,24 @@
-import requests, json, os, logging, logging.handlers
+import logging
+import logging.handlers
+import requests
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 import mysql.connector
 from logstash_formatter import LogstashFormatter
+
+# Configure logging to send logs to Logstash
+handler = logging.handlers.SocketHandler('localhost', logging.handlers.DEFAULT_TCP_LOGGING_PORT)
+formatter = LogstashFormatter()
+handler.setFormatter(formatter)
+
+# Get the root logger and add the configured handler
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger()
+logger.addHandler(handler)
+
+# Other imports
+import json
+import os
 
 WIKIPEDIA_URL = "https://en.wikipedia.org/wiki/List_of_cities_in_India_by_population"
 LAT_LONG_URL = ["https://www.latlong.net/category/cities-102-15.html",
@@ -20,21 +36,6 @@ TRAIN_STATION_URLS = ["https://www.cleartrip.com/trains/stations/list",
     "https://www.cleartrip.com/trains/stations/list?page=4",
     "https://www.cleartrip.com/trains/stations/list?page=5",
 ]
-
-# Configure logging to send logs to Logstash
-handler = logging.handlers.SocketHandler('localhost', logging.handlers.DEFAULT_TCP_LOGGING_PORT)
-formatter = LogstashFormatter()
-handler.setFormatter(formatter)
-
-logging = logging.getLogger()
-logging.addHandler(handler)
-logging.basicConfig(level=logging.INFO)
-
-with open ('application.log', 'w'):
-    pass
-
-logging.basicConfig(filename='application.log', level=logging.INFO, format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
-logging.info("This is an informational message")
 
 load_dotenv()
 
