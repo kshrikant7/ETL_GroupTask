@@ -29,7 +29,7 @@ handler.setFormatter(formatter)
 
 logging = logging.getLogger()
 logging.addHandler(handler)
-logging.setLevel(logging.INFO)
+logging.basicConfig(level=logging.INFO)
 
 with open ('application.log', 'w'):
     pass
