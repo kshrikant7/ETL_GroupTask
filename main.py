@@ -1,24 +1,7 @@
-import logging
-import logging.handlers
-import requests
+import requests, json, os, logging
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 import mysql.connector
-from logstash_formatter import LogstashFormatter
-
-# Configure logging to send logs to Logstash
-handler = logging.handlers.SocketHandler('localhost', logging.handlers.DEFAULT_TCP_LOGGING_PORT)
-formatter = LogstashFormatter()
-handler.setFormatter(formatter)
-
-# Get the root logger and add the configured handler
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger()
-logger.addHandler(handler)
-
-# Other imports
-import json
-import os
 
 WIKIPEDIA_URL = "https://en.wikipedia.org/wiki/List_of_cities_in_India_by_population"
 LAT_LONG_URL = ["https://www.latlong.net/category/cities-102-15.html",
@@ -36,6 +19,27 @@ TRAIN_STATION_URLS = ["https://www.cleartrip.com/trains/stations/list",
     "https://www.cleartrip.com/trains/stations/list?page=4",
     "https://www.cleartrip.com/trains/stations/list?page=5",
 ]
+
+with open ('application.log', 'w'):
+    pass
+
+import logging
+import json
+
+class JsonFormatter(logging.Formatter):
+    def format(self, record):
+        record.asctime = self.formatTime(record, self.datefmt)
+        obj = record.__dict__.copy()
+        obj['timestamp'] = obj['asctime']
+        del obj['asctime']
+        return json.dumps(obj)
+
+handler = logging.FileHandler('log/application1.log')
+handler.setFormatter(JsonFormatter())
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+logger.addHandler(handler)
 
 load_dotenv()
 
@@ -412,7 +416,7 @@ try:
                 details = train_details(code, station_name)
                 train_details_dict[code] = details
                 count += 1
-                if count >= 24:
+                if count >= 5:
                     break
         logging.info('Finished getting train details for stations')
         # Call the function to save data to MySQL
