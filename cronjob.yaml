@@ -3,14 +3,14 @@ kind: CronJob
 metadata:
   name: my-cronjob
 spec:
-  schedule: "30 6  * * *"
+  schedule: "50 9  * * *"
   jobTemplate:
     spec:
       template:
         spec:
           containers:
           - name: etl-task
-            image: shrikantk7/etl_task
+            image: ankit9911/etl:latest
             args:
             - /app/main.py
           restartPolicy: OnFailure
