@@ -7,6 +7,9 @@ WORKDIR /app
 # Add the current directory contents into the container at /app
 ADD . /app
 
+# Update pip
+RUN pip install --upgrade pip
+
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -18,6 +21,7 @@ ARG MYSQL_HOST
 ARG MYSQL_USER 
 ARG MYSQL_PASSWORD 
 ARG MYSQL_DATABASE
+ARG FETCH_TRAIN_DETAILS
 
 ENV OPENWEATHER_API_KEY=$OPENWEATHER_API_KEY
 ENV IRCTC_API_KEY=$IRCTC_API_KEY
@@ -26,6 +30,7 @@ ENV MYSQL_HOST=$MYSQL_HOST
 ENV MYSQL_USER=$MYSQL_USER
 ENV MYSQL_PASSWORD=$MYSQL_PASSWORD
 ENV MYSQL_DATABASE=$MYSQL_DATABASE
+ENV FETCH_TRAIN_DETAILS=$FETCH_TRAIN_DETAILS
 
 # Make port 80 available to the world outside this container
 EXPOSE 80

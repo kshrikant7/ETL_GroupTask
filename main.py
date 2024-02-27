@@ -1,3 +1,4 @@
+import datetime
 import requests, json, os, logging
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
@@ -20,11 +21,7 @@ TRAIN_STATION_URLS = ["https://www.cleartrip.com/trains/stations/list",
     "https://www.cleartrip.com/trains/stations/list?page=5",
 ]
 
-with open ('application.log', 'w'):
-    pass
 
-import logging
-import json
 
 class JsonFormatter(logging.Formatter):
     def format(self, record):
@@ -34,7 +31,9 @@ class JsonFormatter(logging.Formatter):
         del obj['asctime']
         return json.dumps(obj)
 
-handler = logging.FileHandler('application1.log')
+# logging.basicConfig(filename='application.log', level=logging.INFO, format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
+
+handler = logging.FileHandler('application.log')
 handler.setFormatter(JsonFormatter())
 
 logger = logging.getLogger()
@@ -275,6 +274,7 @@ def train_details(station_code, station_name):
 
 # Function to save data to MySQL
 def save_to_mysql(data):
+    date = datetime.datetime.now().strftime("%Y-%m-%d")
     logging.info('Started saving data to MySQL')
     # Establish a connection to the MySQL server
     try:
@@ -288,6 +288,7 @@ def save_to_mysql(data):
         if connection.is_connected():
             cursor = connection.cursor()
 
+
             # Create a table if it doesn't exist
             create_table_query = """
             CREATE TABLE IF NOT EXISTS city_data (
@@ -296,11 +297,20 @@ def save_to_mysql(data):
                 population BIGINT,
                 latitude FLOAT,
                 longitude FLOAT,
+                code VARCHAR(255)
+            );
+            """
+            
+            cursor.execute("TRUNCATE TABLE city_data")
+
+            create_table_weather_query = """
+            CREATE TABLE IF NOT EXISTS weather_data (
+                city_id INT,
+                date DATE,
                 temperature FLOAT,
                 humidity FLOAT,
                 wind_speed FLOAT,
-                weather_conditions VARCHAR(255),
-                code VARCHAR(255) PRIMARY KEY
+                weather_conditions VARCHAR(255)
             );
             """
             create_table_query_train = """
@@ -316,16 +326,30 @@ def save_to_mysql(data):
 			"""
                 
             cursor.execute(create_table_query)
+            cursor.execute(create_table_weather_query)
             cursor.execute(create_table_query_train)
-            cursor.execute("TRUNCATE TABLE city_data")
-            cursor.execute("TRUNCATE TABLE train_data")
 
             # Insert data into the table
             for city, data in combined_data.items():
                 if 'city_id' in data:
                     insert_query = """
-                    INSERT INTO city_data (city_id, city_name, population, latitude, longitude, temperature, humidity, wind_speed, weather_conditions, code)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                    INSERT INTO weather_data (city_id, date, temperature, humidity, wind_speed, weather_conditions)
+                    VALUES (%s, %s, %s, %s, %s, %s);
+                    """
+                    cursor.execute(insert_query, (
+                        data['city_id'],
+                        date,
+                        data['temperature'],
+                        data['humidity'],
+                        data['wind_speed'],
+                        data['weather_conditions']
+                    ))
+
+            for city, data in combined_data.items():
+                if 'city_id' in data:
+                    insert_query = """
+                    INSERT INTO city_data (city_id, city_name, population, latitude, longitude, code)
+                    VALUES (%s, %s, %s, %s, %s, %s);
                     """
                     # Preprocess population to remove non-numeric characters
                     population = ''.join(filter(str.isdigit, data['population']))  # Remove non-numeric characters from population
@@ -335,28 +359,25 @@ def save_to_mysql(data):
                         int(population) if population else None,  # Convert processed population to integer
                         data['latitude'],
                         data['longitude'],
-                        data['temperature'],
-                        data['humidity'],
-                        data['wind_speed'],
-                        data['weather_conditions'],
                         data['code']
                     ))
             
-            for code in train_details_dict.keys():
-                for train in train_details_dict[code]:
-                    insert_query = """
-                    INSERT INTO train_data (code, station_name, train_no, train_name, arrival_time, departure_time)
-                    VALUES (%s, %s, %s, %s, %s, %s);
-					"""
-                    cursor.execute(insert_query, (
-                        code,
-                        train['station_name'],
-						train['train_number'],
-                        train['train_name'],
-						train['arrival_time'],
-						train['departure_time']
-					))
-                    connection.commit()  # Commit changes after each insertion
+            if os.getenv('FETCH_TRAIN_DETAILS') == 'true':
+                for code in train_details_dict.keys():
+                    for train in train_details_dict[code]:
+                        insert_query = """
+                        INSERT INTO train_data (code, station_name, train_no, train_name, arrival_time, departure_time)
+                        VALUES (%s, %s, %s, %s, %s, %s);
+			    		"""
+                        cursor.execute(insert_query, (
+                            code,
+                            train['station_name'],
+			    			train['train_number'],
+                            train['train_name'],
+			    			train['arrival_time'],
+			    			train['departure_time']
+			    		))
+            connection.commit()  # Commit changes after each insertion
         logging.info('Finished saving data to MySQL')
 
     except mysql.connector.Error as error:
@@ -406,19 +427,20 @@ try:
         logging.info('Finished getting weather data for cities')
 
         # Get train details for each city
-        logging.info('Started getting train details for stations')
-        train_details_dict = {}
-        count = 0
-        for city, data in combined_data.items():
-            if 'code' in data:
-                code = data['code']
-                station_name = data['train_station']
-                details = train_details(code, station_name)
-                train_details_dict[code] = details
-                count += 1
-                if count >= 5:
-                    break
-        logging.info('Finished getting train details for stations')
+        if os.getenv('FETCH_TRAIN_DETAILS') == 'true':
+            logging.info('Started getting train details for stations')
+            train_details_dict = {}
+            count = 0
+            for city, data in combined_data.items():
+                if 'code' in data:
+                    code = data['code']
+                    station_name = data['train_station']
+                    details = train_details(code, station_name)
+                    train_details_dict[code] = details
+                    count += 1
+                    if count >= 25:
+                        break
+            logging.info('Finished getting train details for stations')
         # Call the function to save data to MySQL
         save_to_mysql(combined_data)
     logging.info('Finished ETL pipeline')
