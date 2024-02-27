@@ -33,7 +33,7 @@ class JsonFormatter(logging.Formatter):
 
 # logging.basicConfig(filename='application.log', level=logging.INFO, format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
 
-handler = logging.FileHandler('application.log')
+handler = logging.FileHandler('log/application.log')
 handler.setFormatter(JsonFormatter())
 
 logger = logging.getLogger()
