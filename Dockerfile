@@ -5,7 +5,7 @@ FROM python:3.8-slim-buster
 WORKDIR /app
 
 # Add the current directory contents into the container at /app
-ADD . /app
+ADD main.py requirements.txt /app/
 
 # Update pip
 RUN pip install --upgrade pip
